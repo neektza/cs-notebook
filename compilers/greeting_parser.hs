@@ -1,42 +1,45 @@
 -- Greeting parser from scratch using parser combinators
 
-data Greeting = Bok | MozdaBok String | NoBok deriving (Show)
-data Dots = Dots Int deriving (Show)
+data Bok = Bok | NoBok deriving (Show)
 
-input1 = "..........book............"
+data Mozda x = Ipak x | Nista deriving (Show)
 
-dotParser :: String -> (Dots, String)
-dotParser str = dotCounter (Dots 0, str)
+data Greeting = DotsAnd Int Greeting
+			  | GreetAnd Bok Greeting
+			  | Greet Bok
+			  | Dots Int deriving (Show)
 
-bokParser :: String -> (Greeting, String)
-bokParser str = bokMachine (NoBok, str)
+input = "...........boooook..........."
 
-greetingParser :: String -> (Dots, Greeting)
-greetingParser s = (prvi, drugi)
-	where (prvi, drugi, _) = sequencer (Dots 0, NoBok, s)
+greetingParser :: String -> Mozda Greeting
+greetingParser str = case dotCounter str of
+	(0, rest) -> case bokMachine rest of
+		(NoBok, rest) -> Nista
+		(Bok, rest) -> case dotCounter rest of
+			(0, rest) -> Ipak (Greet Bok)
+			(x, rest) -> Ipak (GreetAnd Bok (Dots x))
+	(x, rest) -> case bokMachine rest of
+		(NoBok, rest) -> Ipak (Dots x)
+		(Bok, rest) -> case dotCounter rest of
+			(0, rest) -> Ipak (DotsAnd x (Greet Bok))
+			(y, rest) -> Ipak (DotsAnd x (GreetAnd Bok (Dots y)))
 
--- Low level stuff
+--- Low level machines
 
-sequencer :: (Dots, Greeting, String) -> (Dots, Greeting, String)
-sequencer (Dots 0, NoBok, s) = case dotParser s of
-								  (Dots 0, rest) -> sequencer(Dots 0, NoBok, rest)
-								  (Dots x, rest) -> sequencer(Dots x, NoBok, rest)
-sequencer (Dots x, NoBok, s) = case bokParser s of
-								  (NoBok, rest) -> sequencer(Dots x, NoBok, rest)
-								  (Bok, rest) -> sequencer(Dots x, Bok, rest)
-sequencer (Dots x, Bok, s) = case dotParser s of
-							   (Dots 0, rest) -> (Dots x, Bok, rest)
-							   (Dots y, rest) -> (Dots (x+y), Bok, rest)
+dotCounter :: String -> (Int, String)
+dotCounter s = cnt 0 s
+	where
+		cnt 0 "" = (0, "")
+		cnt acc ('.':tail) = cnt (succ acc) tail
+		cnt 0 s = (0, s)
+		cnt acc s = (acc, s)
 
+bokMachine :: String -> (Bok, String)
+bokMachine ('b':tail) = case samooovi tail of
+							 ('k':tail2) -> (Bok, tail2)
+							 _		   -> (NoBok, 'b':tail)
+			where
+				samooovi ('o':tail) = samooovi tail
+				samooovi tail = tail
 
-bokMachine :: (Greeting, String) -> (Greeting, String)
-bokMachine (NoBok         , 'b':rest) = bokMachine (MozdaBok "b"  , rest)
-bokMachine (MozdaBok "b"  , 'o':rest) = bokMachine (MozdaBok "bo" , rest)
-bokMachine (MozdaBok "bo" , 'k':rest) = bokMachine (Bok           , rest)
-bokMachine (NoBok         , rest) = (NoBok                        , rest)
-bokMachine (Bok           , rest) = (Bok                          , rest)
-
-dotCounter :: (Dots, String) -> (Dots, String)
-dotCounter ((Dots 0), "") = (Dots 0, "")
-dotCounter ((Dots acc), ('.':rest)) = dotCounter (Dots (acc+1), rest)
-dotCounter ((Dots acc), (rest)) = (Dots acc, rest)
+bokMachine s = (NoBok, s)
