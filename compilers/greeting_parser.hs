@@ -9,37 +9,42 @@ data Greeting = DotsAnd Int Greeting
 			  | Greet Bok
 			  | Dots Int deriving (Show)
 
+
+data Parser x = P (String -> Mozda (x, String))
+
 input = "...........boooook..........."
 
-greetingParser :: String -> Mozda Greeting
+greetingParser :: String -> Mozda (Greeting, String)
 greetingParser str = case dotCounter str of
-	(0, rest) -> case bokMachine rest of
-		(NoBok, rest) -> Nista
-		(Bok, rest) -> case dotCounter rest of
-			(0, rest) -> Ipak (Greet Bok)
-			(x, rest) -> Ipak (GreetAnd Bok (Dots x))
-	(x, rest) -> case bokMachine rest of
-		(NoBok, rest) -> Ipak (Dots x)
-		(Bok, rest) -> case dotCounter rest of
-			(0, rest) -> Ipak (DotsAnd x (Greet Bok))
-			(y, rest) -> Ipak (DotsAnd x (GreetAnd Bok (Dots y)))
+	(Ipak (0, rest)) -> case bokMachine rest of
+		Nista -> Nista
+		(Ipak (Bok, rest)) -> case dotCounter rest of
+				(Nista) -> Ipak ((Greet Bok), rest)
+				(Ipak (0, rest)) -> Ipak ((Greet Bok), rest)
+				(Ipak (x, rest)) -> Ipak ((GreetAnd Bok (Dots x)), rest)
+	(Ipak (x, rest)) -> case bokMachine rest of
+		Nista -> Ipak ((Dots x), rest)
+		(Ipak (Bok, rest)) -> case dotCounter rest of
+			Nista -> Ipak ((DotsAnd x (Greet Bok)), rest)
+			(Ipak (0, rest)) -> Ipak ((DotsAnd x (Greet Bok)), rest)
+			(Ipak (y, rest)) -> Ipak ((DotsAnd x (GreetAnd Bok (Dots y))), rest)
 
 --- Low level machines
 
-dotCounter :: String -> (Int, String)
+dotCounter :: String -> Mozda (Int, String)
 dotCounter s = cnt 0 s
 	where
-		cnt 0 "" = (0, "")
+		cnt 0 "" = Nista
 		cnt acc ('.':tail) = cnt (succ acc) tail
-		cnt 0 s = (0, s)
-		cnt acc s = (acc, s)
+		cnt 0 s = Ipak (0, s)
+		cnt acc s = Ipak (acc, s)
 
-bokMachine :: String -> (Bok, String)
+bokMachine :: String -> Mozda (Bok, String)
 bokMachine ('b':tail) = case samooovi tail of
-							 ('k':tail2) -> (Bok, tail2)
-							 _		   -> (NoBok, 'b':tail)
+						  ('k':tail2) -> Ipak (Bok, tail2)
+						  _		   -> Nista
 			where
 				samooovi ('o':tail) = samooovi tail
 				samooovi tail = tail
 
-bokMachine s = (NoBok, s)
+bokMachine s = Nista
