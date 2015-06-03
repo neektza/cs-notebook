@@ -17,22 +17,10 @@ fn main() {
     };
 
     let reader = BufReader::new(file);
-    let lines: Vec<_> = reader.lines().collect();
-
-    // println!("{:?}", lines);
     
-    let mut nums:Vec<i64> = vec![];
-                
-    for l in lines {
-        let num = match l {
-            Ok(s) => match s.parse() { 
-                Ok(i) => i,
-                Err(e) => panic!("{:?}", e)
-            },
-            Err(e) => panic!("{:?}", e)
-        };
-        nums.push(num);
-    }
+    let nums: Vec<i64> = reader.lines().map(|l| {
+        l.ok().and_then(|s| s.parse().ok()).unwrap_or(0)
+    }).collect();
 
     println!("{:?}", nums);
 }
