@@ -2,3 +2,6 @@
 name = "two-sum"
 version = "0.1.0"
 authors = ["Nikica Jokic <neektza@gmail.com>"]
+
+[dependencies]
+rand = "0.3.8"
