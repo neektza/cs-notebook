@@ -1,4 +1,4 @@
-# 100%
+# painless | 100%
 # https://codility.com/programmers/task/tape_equilibrium/
 
 def solution(array)

@@ -1,4 +1,4 @@
-# 100%
+# painless | 100%
 # https://codility.com/programmers/task/missing_integer/
 
 require 'set'

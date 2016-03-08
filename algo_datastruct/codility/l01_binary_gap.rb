@@ -1,4 +1,4 @@
-# 100%
+# painless | 100%
 # https://codility.com/programmers/task/binary_gap/
 
 def solution(n)

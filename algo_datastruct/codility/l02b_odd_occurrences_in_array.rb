@@ -1,4 +1,4 @@
-# 100%
+# painless | 100%
 # https://codility.com/programmers/task/odd_occurrences_in_array/
 
 def solution(a)
